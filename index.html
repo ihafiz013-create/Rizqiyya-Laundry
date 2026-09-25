@@ -154,7 +154,7 @@
             <!-- Request Pickup (Direct WA Integration) -->
             <section class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-2xl text-white shadow-lg">
                 <h3 class="font-bold text-lg mb-2"><i class="fas fa-motorcycle mr-2"></i>Jemput Cucian Sekarang</h3>
-                <p class="text-sm opacity-90 mb-4">Pilih jadwal dan kurir, sistem akan langsung membuka WhatsApp untuk mengirim detail ke kurir yang dipilih.</p>
+                <p class="text-sm opacity-90 mb-4">Pilih jadwal dan kurir. Aplikasi WhatsApp akan otomatis terbuka.</p>
                 
                 <div class="space-y-3">
                     <input type="text" id="pickupAddress" placeholder="Alamat Lengkap (Rt/Rw)" class="w-full px-4 py-2.5 rounded-xl text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-300">
@@ -174,8 +174,9 @@
                         </select>
                     </div>
                     
+                    <!-- PERBAIKAN: Fungsi onclick langsung dieksekusi tanpa delay -->
                     <button onclick="submitPickup()" class="w-full bg-white text-blue-700 font-bold py-3 rounded-xl mt-2 shadow hover:bg-gray-100 transition flex items-center justify-center">
-                        <i class="fab fa-whatsapp mr-2 text-green-500 text-lg"></i> Hubungi Kurir (WA)
+                        <i class="fab fa-whatsapp mr-2 text-green-500 text-lg"></i> Pesan Kurir (WA)
                     </button>
                 </div>
             </section>
@@ -240,7 +241,6 @@
         async function requestOTP() {
             let phone = document.getElementById('loginPhone').value.trim();
             
-            // Clean leading zero if user typed it
             if (phone.startsWith('0')) {
                 phone = phone.substring(1);
             }
@@ -253,7 +253,6 @@
             fullPhoneNumber = "+62" + phone;
             await showLoading("Menyambungkan ke WhatsApp Business API...");
             
-            // Show alert simulation sending OTP to customer
             Swal.fire({
                 icon: 'success',
                 title: 'WhatsApp Terkirim!',
@@ -266,7 +265,6 @@
             document.getElementById('otpStep').classList.remove('hidden');
             otpInputs[0].focus();
             
-            // Auto fill for demo purposes
             setTimeout(() => {
                 otpInputs[0].value = 1; otpInputs[1].value = 2; otpInputs[2].value = 3; otpInputs[3].value = 4;
             }, 2500);
@@ -280,12 +278,10 @@
             }
             await showLoading("Memverifikasi Data Pelanggan...");
             
-            // Set User Data
             document.getElementById('customerNameDisplay').innerText = fullPhoneNumber;
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             
-            // Save state
             localStorage.setItem('rizqiyya_cust_logged_in', 'true');
             localStorage.setItem('rizqiyya_cust_phone', fullPhoneNumber);
         }
@@ -314,39 +310,39 @@
             })
         }
 
-        // --- SISTEM REQUEST PICKUP TERBARU (MEMBUKA WHATSAPP LANGSUNG) ---
-        async function submitPickup() {
+        // --- PERBAIKAN: FUNGSI SUBMIT PICKUP TANPA DELAY ---
+        function submitPickup() {
             const addr = document.getElementById('pickupAddress').value;
             const time = document.getElementById('pickupTime').value;
             const courierSelect = document.getElementById('pickupCourier');
             
             if(!addr || !time || !courierSelect.value) {
-                Swal.fire({icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon isi alamat, waktu, dan pilih kurir.', confirmButtonColor: '#2563eb'});
+                Swal.fire({icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon isi alamat, waktu, dan pilih kurir terlebih dahulu.', confirmButtonColor: '#2563eb'});
                 return;
             }
 
-            const courierPhone = courierSelect.value; // Mengambil nomor WA kurir (628...)
+            const courierPhone = courierSelect.value;
             const courierName = courierSelect.options[courierSelect.selectedIndex].text;
             const customerPhone = localStorage.getItem('rizqiyya_cust_phone') || "Pelanggan";
 
-            await showLoading(`Membuka WhatsApp ${courierName}...`, 1000);
+            // Format Pesan
+            const waMessage = `Halo ${courierName},%0A%0ASaya ingin request penjemputan cucian Rizqiyya Laundry.%0A%0A📍 *Alamat:* ${addr}%0A⏰ *Waktu Jemput:* ${time}%0A📞 *Kontak:* ${customerPhone}%0A%0AMohon segera dijadwalkan ya. Terima kasih!`;
             
-            // Format pesan yang akan dikirim ke WhatsApp Kurir
-            const waMessage = `Halo ${courierName},%0A%0ASaya ingin request penjemputan cucian Rizqiyya Laundry.%0A%0A📍 *Alamat:* ${addr}%0A⏰ *Waktu Jemput:* ${time}%0A📞 *Kontak Pelanggan:* ${customerPhone}%0A%0AMohon segera dijadwalkan ya. Terima kasih!`;
-            
-            // Buat link API WhatsApp resmi
+            // Format URL WA
             const waLink = `https://wa.me/${courierPhone}?text=${waMessage}`;
             
-            // Buka aplikasi WhatsApp langsung di HP/PC pelanggan
-            window.open(waLink, '_blank');
+            // Pengalihan instan menggunakan location.href (paling stabil untuk Mobile App/PWA)
+            window.location.href = waLink;
             
-            // Reset form setelah tombol ditekan
-            document.getElementById('pickupAddress').value = '';
-            document.getElementById('pickupTime').value = '';
-            document.getElementById('pickupCourier').value = '';
+            // Membersihkan form secara diam-diam setelah 1 detik
+            setTimeout(() => {
+                document.getElementById('pickupAddress').value = '';
+                document.getElementById('pickupTime').value = '';
+                document.getElementById('pickupCourier').value = '';
+            }, 1000);
         }
+        // ----------------------------------------------------
 
-        // Real-time Sync (Listening to Admin events via LocalStorage)
         window.addEventListener('storage', (event) => {
             if (event.key === 'rizqiyya_order_update') {
                 const data = JSON.parse(event.newValue);
