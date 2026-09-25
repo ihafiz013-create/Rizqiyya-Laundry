@@ -4,36 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Rizqiyya Laundry - Aplikasi Pelanggan</title>
-    
     <meta name="theme-color" content="#4f46e5">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Icons & SweetAlert -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #334155; -webkit-tap-highlight-color: transparent; }
         .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.6); }
         .premium-shadow { box-shadow: 0 10px 40px -10px rgba(79, 70, 229, 0.15); }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        
         .fade-in { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
         .nav-active { color: #4f46e5; }
         .nav-active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #4f46e5; border-radius: 4px; }
     </style>
 </head>
 <body class="overflow-hidden bg-slate-50">
 
-    <!-- OVERLAY LOADING -->
     <div id="loadingOverlay" class="hidden fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center flex-col">
         <div class="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
         <p id="loadingText" class="text-indigo-600 font-bold tracking-widest text-sm animate-pulse uppercase">Memproses...</p>
@@ -41,498 +30,334 @@
 
     <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="min-h-screen flex flex-col justify-center px-6 bg-slate-900 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-rose-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        
         <div class="glass-panel p-8 rounded-[2rem] shadow-2xl relative z-10 border-t-4 border-t-indigo-500">
-            <div class="w-20 h-20 bg-indigo-50 rounded-[1.5rem] flex items-center justify-center mx-auto mb-6 shadow-inner rotate-3">
-                <i class="fas fa-tshirt text-4xl text-indigo-600 -rotate-3"></i>
-            </div>
             <h1 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight mb-2">Rizqiyya<span class="text-indigo-600">.</span></h1>
             <p class="text-slate-500 text-center text-sm font-medium mb-8">Layanan Cuci Premium</p>
             
-            <!-- STEP 1: Input Nomor -->
             <div id="phoneStep">
                 <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2">Nomor WhatsApp Anda</label>
                 <div class="flex items-center bg-white border-2 border-slate-100 rounded-2xl overflow-hidden mb-6 focus-within:border-indigo-500 transition-colors shadow-sm">
                     <span class="bg-slate-50 px-4 py-4 font-bold text-slate-600 border-r border-slate-100">+62</span>
                     <input type="tel" id="loginPhone" placeholder="81234567890" class="w-full px-4 py-4 outline-none font-bold text-slate-700 bg-transparent" autocomplete="off">
                 </div>
-                <button onclick="requestOTP()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-600/30 transition-all text-lg">
-                    Kirim Kode OTP
-                </button>
+                <button onclick="requestOTP()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-all text-lg">Kirim Kode OTP</button>
             </div>
 
-            <!-- STEP 2: Verifikasi OTP -->
             <div id="otpStep" class="hidden fade-in">
-                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 text-sm text-emerald-800 flex items-start">
-                    <i class="fab fa-whatsapp text-emerald-500 text-2xl mr-3 mt-1"></i>
-                    <div>
-                        <p class="font-bold">Cek Pesan WhatsApp Anda!</p>
-                        <p class="text-[10px] mt-1 text-emerald-600">Kode OTP telah dikirim oleh Admin <b>(0857-1012-7234)</b> ke nomor <b id="displayTargetPhone" class="tracking-wider"></b></p>
-                    </div>
-                </div>
                 <p class="text-xs text-slate-400 text-center mb-4 font-medium">(Gunakan kode demo: 1234)</p>
                 <div class="flex justify-center gap-3 mb-8">
-                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-colors">
-                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-colors">
-                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-colors">
-                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none transition-colors">
+                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-14 h-16 text-center text-2xl font-extrabold bg-slate-50 border-2 border-slate-200 rounded-2xl outline-none">
                 </div>
-                <button onclick="verifyOTP()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg shadow-emerald-500/30 transition-all text-lg">
-                    Verifikasi & Masuk
-                </button>
-                <button onclick="resetLogin()" class="w-full mt-4 text-slate-400 text-sm font-bold hover:text-slate-600 transition-colors">Ganti Nomor</button>
+                <button onclick="verifyOTP()" class="w-full bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-lg text-lg">Verifikasi & Masuk</button>
             </div>
         </div>
     </div>
 
     <!-- MAIN APP SCREEN -->
     <div id="mainApp" class="hidden h-screen flex flex-col bg-slate-50 relative">
-        
-        <!-- Header Profil -->
-        <header class="bg-indigo-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg relative overflow-hidden z-10 shrink-0">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <header class="bg-indigo-600 pt-12 pb-6 px-6 rounded-b-[2.5rem] shadow-lg relative z-10 shrink-0" id="mainHeader">
             <div class="relative z-10 flex justify-between items-center mb-6">
                 <div>
                     <p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-1">Selamat Datang,</p>
                     <h1 class="text-xl font-extrabold text-white truncate max-w-[200px]" id="customerNameDisplay">Pelanggan</h1>
                 </div>
-                <button onclick="logout()" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md text-white hover:bg-white/20 transition-colors border border-white/20">
-                    <i class="fas fa-power-off"></i>
-                </button>
-            </div>
-            
-            <div class="glass-panel bg-white/10 border-white/20 flex justify-between items-center p-4 rounded-2xl relative z-10">
-                <div class="text-center w-1/2 border-r border-white/20">
-                    <p class="text-[10px] text-indigo-200 uppercase font-bold tracking-widest mb-1">Poin Member</p>
-                    <p class="text-2xl font-extrabold text-white flex justify-center items-center"><i class="fas fa-star text-amber-300 text-lg mr-2"></i> <span id="pointDisplay">250</span></p>
-                </div>
-                <div class="text-center w-1/2">
-                    <p class="text-[10px] text-indigo-200 uppercase font-bold tracking-widest mb-1">Cucian Selesai</p>
-                    <p class="text-2xl font-extrabold text-white flex justify-center items-center"><i class="fas fa-medal text-emerald-300 text-lg mr-2"></i> <span id="orderCountDisplay">12</span></p>
+                <div class="flex items-center gap-2">
+                    <button id="notifBadgeChat" onclick="openLiveChat()" class="hidden w-10 h-10 bg-rose-500 rounded-full flex items-center justify-center text-white border border-white/20 relative animate-pulse"><i class="fas fa-comment"></i><span class="absolute -top-1 -right-1 bg-white text-rose-600 text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">!</span></button>
+                    <button onclick="logout()" class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white"><i class="fas fa-power-off"></i></button>
                 </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto hide-scroll p-6 pb-28 relative z-0">
+        <main class="flex-1 overflow-y-auto hide-scroll p-6 pb-28 relative z-0" id="mainContentArea">
             
             <!-- VIEW: BERANDA -->
             <div id="view-home" class="view-section fade-in">
-                
-                <!-- Status Kurir Penjemputan (Real-time dari Admin) -->
-                <div id="courierStatusContainer" class="hidden bg-indigo-50 p-5 rounded-[2rem] border border-indigo-200 mb-6 relative overflow-hidden premium-shadow">
-                    <div class="absolute right-[-10%] top-[-10%] opacity-10"><i class="fas fa-motorcycle text-8xl text-indigo-500"></i></div>
-                    <div class="relative z-10">
-                        <div class="flex items-center justify-between mb-3">
-                            <h3 class="font-extrabold text-indigo-900 text-sm"><i class="fas fa-satellite-dish mr-2 text-indigo-500 animate-pulse"></i>Radar Kurir Aktif</h3>
-                            <span class="bg-indigo-600 text-white text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider">Menuju Lokasi</span>
-                        </div>
-                        <p class="text-xs text-indigo-700 font-medium mb-3">Kurir kami sedang/akan menuju lokasi Anda untuk melakukan penjemputan cucian.</p>
-                        <div class="bg-white p-3 rounded-xl border border-indigo-100 flex items-center justify-between">
-                            <div>
-                                <p class="text-[10px] text-slate-500 uppercase font-bold">Nama Kurir</p>
-                                <p class="font-extrabold text-slate-800" id="activeCourierName">-</p>
-                            </div>
-                            <button onclick="chatCourier()" class="bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-emerald-200"><i class="fab fa-whatsapp mr-1"></i> Chat Kurir</button>
-                        </div>
-                    </div>
+                <div id="courierStatusContainer" class="hidden bg-indigo-50 p-5 rounded-[2rem] border border-indigo-200 mb-6 premium-shadow">
+                    <h3 class="font-extrabold text-indigo-900 text-sm mb-3">Radar Kurir Aktif</h3>
+                    <p class="text-xs text-indigo-700 mb-3">Kurir <b id="activeCourierName"></b> sedang/akan menuju lokasi Anda.</p>
                 </div>
-
-                <!-- Kartu Member -->
                 <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100 mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-extrabold text-slate-800">Kartu Loyalti</h3>
-                        <span class="text-[10px] bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-bold uppercase">Gratis 2 Kg!</span>
-                    </div>
-                    <div class="flex justify-between items-center mb-4 relative z-0">
-                        <div class="absolute top-1/2 left-0 w-full h-1 bg-slate-100 -z-10 transform -translate-y-1/2 rounded-full"></div>
-                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30"><i class="fas fa-check"></i></div>
-                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30"><i class="fas fa-check"></i></div>
-                        <div class="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shadow-md shadow-indigo-600/30"><i class="fas fa-check"></i></div>
-                        <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center font-bold">4</div>
-                        <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-bold border-2 border-amber-200"><i class="fas fa-gift"></i></div>
-                    </div>
-                    <p class="text-xs text-slate-500 text-center font-medium">Kumpulkan 2 stempel lagi untuk reward.</p>
-                </div>
-
-                <!-- Status Cucian di Toko -->
-                <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100 mb-6">
-                    <div class="flex justify-between items-center mb-5">
-                        <h3 class="font-extrabold text-slate-800"><i class="fas fa-box-open text-indigo-500 mr-2"></i>Status Cucian di Toko</h3>
-                        <span class="flex items-center text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider"><span class="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> Live Sync</span>
-                    </div>
-                    
-                    <div id="activeOrderContainer">
-                        <div class="text-center p-5 bg-slate-50 rounded-xl border border-slate-100">
-                            <i class="fas fa-check-circle text-3xl text-slate-300 mb-2"></i>
-                            <p class="text-sm text-slate-500 font-medium">Belum ada cucian yang sedang diproses kasir.</p>
-                        </div>
-                    </div>
+                    <h3 class="font-extrabold text-slate-800 mb-5">Status Cucian di Toko</h3>
+                    <div id="activeOrderContainer"></div>
                 </div>
             </div>
 
             <!-- VIEW: PESAN (ORDER) -->
             <div id="view-order" class="view-section hidden fade-in">
-                <div class="bg-white p-6 md:p-8 rounded-[2rem] premium-shadow border border-slate-100">
-                    <div class="text-center mb-6">
-                        <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl"><i class="fas fa-motorcycle"></i></div>
-                        <h2 class="text-2xl font-extrabold text-slate-800">Panggil Kurir</h2>
-                        <p class="text-xs text-slate-500 font-medium mt-1">Pesanan Anda akan masuk ke radar penjemputan Kurir dan sistem Kasir Toko.</p>
-                    </div>
-
-                    <div class="space-y-5">
-                        <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 pl-1">Nama Anda</label>
-                            <input type="text" id="orderName" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:border-indigo-500 focus:bg-white font-bold text-slate-700 transition-all">
-                        </div>
-                        
-                        <div>
-                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 pl-1">Alamat Penjemputan / Patokan</label>
-                            <textarea id="orderAddress" rows="2" placeholder="Jl. Asem Baris Raya..." class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:border-indigo-500 focus:bg-white font-medium text-slate-700 transition-all text-sm"></textarea>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 pl-1">Waktu</label>
-                                <select id="orderTime" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:border-indigo-500 font-bold text-slate-700">
-                                    <option value="Pagi (08:00-11:00)">Pagi</option>
-                                    <option value="Siang (13:00-15:00)">Siang</option>
-                                    <option value="Sore (16:00-18:00)">Sore</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-2 pl-1">Pilih Kurir</label>
-                                <select id="orderCourier" class="w-full bg-slate-50 border border-slate-200 p-4 rounded-xl outline-none focus:border-indigo-500 font-bold text-slate-700">
-                                    <option value="6285701994169|Hafiz">Hafiz</option>
-                                    <option value="6287886000529|Nizar">Nizar</option>
-                                    <option value="6282135313693|Khotif">Khotif</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- Price List -->
-                        <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mt-2">
-                            <h4 class="text-xs font-extrabold text-indigo-800 uppercase tracking-wider mb-2 flex items-center"><i class="fas fa-tags mr-2 text-indigo-500"></i> Daftar Harga Layanan</h4>
-                            <div class="text-[10px] text-indigo-900 font-medium grid grid-cols-2 gap-2">
-                                <div>• Cuci Setrika: <b class="text-indigo-700">9k/Kg</b><br>• Cuci Kering: <b class="text-indigo-700">7k/Kg</b><br>• Setrika Only: <b class="text-indigo-700">7k/Kg</b></div>
-                                <div>• Bedcover: <b class="text-indigo-700">35k - 45k</b><br>• Selimut: <b class="text-indigo-700">15k - 30k</b><br>• Sprei: <b class="text-indigo-700">15k - 30k</b></div>
-                            </div>
-                            <p class="text-[9px] text-indigo-500 mt-2 italic">*Harga total baru akan muncul di aplikasi ini setelah kurir membawa baju Anda dan ditimbang oleh kasir toko.</p>
-                        </div>
-
-                        <button onclick="submitOrderOnline()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg shadow-indigo-600/30 mt-4 text-lg transition-all flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane"></i> Kirim Pesanan
-                        </button>
+                <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100">
+                    <h2 class="text-xl font-extrabold text-slate-800 mb-5">Panggil Kurir</h2>
+                    <div class="space-y-4">
+                        <input type="text" id="orderName" class="w-full bg-slate-50 border p-4 rounded-xl font-bold" placeholder="Nama">
+                        <textarea id="orderAddress" class="w-full bg-slate-50 border p-4 rounded-xl text-sm" placeholder="Alamat Penjemputan"></textarea>
+                        <select id="orderTime" class="w-full bg-slate-50 border p-4 rounded-xl font-bold"><option>Pagi (08:00-11:00)</option><option>Siang (13:00-15:00)</option><option>Sore (16:00-18:00)</option></select>
+                        <select id="orderCourier" class="w-full bg-slate-50 border p-4 rounded-xl font-bold">
+                            <option value="6285701994169|Hafiz">Hafiz</option><option value="6287886000529|Nizar">Nizar</option><option value="6282135313693|Khotif">Khotif</option>
+                        </select>
+                        <button onclick="submitOrderOnline()" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl">Kirim Pesanan</button>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: AKUN & PROFIL -->
+            <!-- VIEW: AKUN -->
             <div id="view-profile" class="view-section hidden fade-in">
-                <div class="bg-white p-6 md:p-8 rounded-[2rem] premium-shadow border border-slate-100">
-                    <h2 class="text-2xl font-extrabold text-slate-800 mb-6">Akun Saya</h2>
-                    
-                    <div class="bg-emerald-50 border border-emerald-100 p-6 rounded-[1.5rem] mb-6 relative overflow-hidden">
-                        <div class="absolute right-0 top-0 w-20 h-20 bg-emerald-100 rounded-bl-full"></div>
-                        <h3 class="font-extrabold text-emerald-800 mb-1 relative z-10"><i class="fas fa-gift mr-2"></i>Program Referral</h3>
-                        <p class="text-xs text-emerald-600 mb-4 font-medium relative z-10">Undang tetangga, dapatkan saldo Rp 10.000!</p>
-                        
-                        <div class="flex items-center gap-2 relative z-10">
-                            <div class="bg-white flex-1 p-3 rounded-xl border border-emerald-200 text-center">
-                                <b class="font-mono text-slate-700 tracking-wider">RIZ-CUST-99</b>
-                            </div>
-                            <button onclick="copyReferral()" class="bg-emerald-500 text-white w-12 h-full rounded-xl shadow-md hover:bg-emerald-600 flex items-center justify-center transition-colors">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
+                <div class="bg-white p-6 rounded-[2rem] premium-shadow border border-slate-100 space-y-3">
+                    <h2 class="text-xl font-extrabold text-slate-800 mb-4">Akun Saya</h2>
+                    <button onclick="openCSOptions()" class="w-full text-left p-4 bg-indigo-50 rounded-xl font-bold text-indigo-700 border border-indigo-100 flex justify-between items-center transition-colors">
+                        <span><i class="fas fa-headset text-indigo-400 w-6"></i> Hubungi CS Admin</span>
+                        <i class="fas fa-chevron-right text-indigo-300 text-sm"></i>
+                    </button>
+                    <button onclick="switchView('history')" class="w-full text-left p-4 bg-slate-50 rounded-xl font-bold text-slate-700 border flex justify-between items-center transition-colors">
+                        <span><i class="fas fa-history text-slate-400 w-6"></i> Riwayat Transaksi</span>
+                        <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- VIEW: RIWAYAT TRANSAKSI -->
+            <div id="view-history" class="view-section hidden fade-in">
+                <div class="flex items-center mb-6">
+                    <button onclick="switchView('profile')" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-600 shadow-sm mr-4 border"><i class="fas fa-arrow-left"></i></button>
+                    <h2 class="text-xl font-extrabold text-slate-800">Riwayat Transaksi</h2>
+                </div>
+                <div id="historyContainer" class="space-y-4">
+                    <!-- Data riwayat dirender disini -->
+                </div>
+            </div>
+
+            <!-- VIEW: LIVE CHAT -->
+            <div id="view-chat" class="view-section hidden fade-in h-full flex flex-col -m-6 bg-white">
+                <div class="bg-indigo-600 p-4 text-white flex items-center gap-3 shrink-0 rounded-b-2xl shadow-md z-10">
+                    <button onclick="switchView('profile'); showBottomNav(true)" class="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full"><i class="fas fa-arrow-left"></i></button>
+                    <div>
+                        <h3 class="font-bold text-sm">CS Rizqiyya Laundry</h3>
+                        <p class="text-[10px] text-indigo-200">Online - Siap membantu</p>
                     </div>
-                    
-                    <div class="space-y-3">
-                        <button class="w-full text-left p-4 bg-slate-50 rounded-xl font-bold text-slate-700 hover:bg-slate-100 flex justify-between items-center transition-colors border border-slate-100">
-                            <span><i class="fas fa-history text-slate-400 w-6"></i> Riwayat Transaksi</span>
-                            <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
-                        </button>
-                        <button class="w-full text-left p-4 bg-slate-50 rounded-xl font-bold text-slate-700 hover:bg-slate-100 flex justify-between items-center transition-colors border border-slate-100">
-                            <span><i class="fas fa-headset text-slate-400 w-6"></i> Hubungi CS Admin</span>
-                            <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
-                        </button>
-                        <button onclick="logout()" class="w-full text-left p-4 bg-rose-50 rounded-xl font-bold text-rose-600 hover:bg-rose-100 flex justify-between items-center transition-colors border border-rose-100 mt-4">
-                            <span><i class="fas fa-sign-out-alt w-6"></i> Keluar Akun</span>
-                        </button>
-                    </div>
+                </div>
+                
+                <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 pb-20">
+                    <!-- Chat Bubbles -->
+                </div>
+
+                <div class="p-3 bg-white border-t border-slate-200 flex gap-2 shrink-0 absolute bottom-0 w-full z-20">
+                    <input type="text" id="chatInput" placeholder="Ketik pesan..." class="flex-1 bg-slate-100 border-none px-4 py-3 rounded-full outline-none text-sm font-medium focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="sendChatMessage()" class="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 shadow-md"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
 
         </main>
 
-        <!-- Bottom Navigation Bar -->
-        <nav class="bg-white border-t border-slate-200 px-6 py-4 fixed bottom-0 w-full z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] pb-safe rounded-t-3xl">
+        <!-- Bottom Nav -->
+        <nav id="bottomNav" class="bg-white border-t border-slate-200 px-6 py-4 fixed bottom-0 w-full z-20 shadow-[0_-10px_20px_rgba(0,0,0,0.03)] pb-safe rounded-t-3xl">
             <div class="flex justify-between items-center max-w-md mx-auto relative">
-                <button onclick="switchView('home', this)" class="nav-btn nav-active flex flex-col items-center gap-1 w-20 relative transition-colors">
-                    <i class="fas fa-home text-xl mb-0.5"></i><span class="text-[10px] font-bold tracking-wide">Beranda</span>
-                </button>
-                <button onclick="switchView('order', this)" class="nav-btn text-slate-400 hover:text-indigo-600 flex flex-col items-center gap-1 w-20 relative transition-colors">
-                    <i class="fas fa-plus-circle text-xl mb-0.5"></i><span class="text-[10px] font-bold tracking-wide">Pesan</span>
-                </button>
-                <button onclick="switchView('profile', this)" class="nav-btn text-slate-400 hover:text-indigo-600 flex flex-col items-center gap-1 w-20 relative transition-colors">
-                    <i class="fas fa-user text-xl mb-0.5"></i><span class="text-[10px] font-bold tracking-wide">Akun Saya</span>
-                </button>
+                <button onclick="switchView('home', this)" class="nav-btn nav-active flex flex-col items-center gap-1 w-20 transition-colors"><i class="fas fa-home text-xl mb-0.5"></i><span class="text-[10px] font-bold">Beranda</span></button>
+                <button onclick="switchView('order', this)" class="nav-btn text-slate-400 flex flex-col items-center gap-1 w-20 transition-colors"><i class="fas fa-plus-circle text-xl mb-0.5"></i><span class="text-[10px] font-bold">Pesan</span></button>
+                <button onclick="switchView('profile', this)" class="nav-btn text-slate-400 flex flex-col items-center gap-1 w-20 transition-colors"><i class="fas fa-user text-xl mb-0.5"></i><span class="text-[10px] font-bold">Akun</span></button>
             </div>
         </nav>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
         let fullPhoneNumber = "";
-        
-        // Auto-focus OTP inputs
         const otpInputs = document.querySelectorAll('.otp-input');
         otpInputs.forEach((input, index) => {
-            input.addEventListener('input', (e) => {
-                if(e.target.value.length === 1 && index < otpInputs.length - 1) otpInputs[index + 1].focus();
-            });
-            input.addEventListener('keydown', (e) => {
-                if(e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus();
-            });
+            input.addEventListener('input', (e) => { if(e.target.value.length === 1 && index < otpInputs.length - 1) otpInputs[index + 1].focus(); });
+            input.addEventListener('keydown', (e) => { if(e.key === 'Backspace' && !e.target.value && index > 0) otpInputs[index - 1].focus(); });
         });
-
-        function showLoading(text, duration = 1500) {
-            return new Promise((resolve) => {
-                const overlay = document.getElementById('loadingOverlay');
-                document.getElementById('loadingText').innerText = text;
-                overlay.classList.remove('hidden');
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                    resolve();
-                }, duration);
-            });
-        }
 
         async function requestOTP() {
             let phone = document.getElementById('loginPhone').value.trim();
             if (phone.startsWith('0')) phone = phone.substring(1);
-            if(!phone || phone.length < 9) return Swal.fire({icon: 'error', title: 'Nomor Tidak Valid', confirmButtonColor: '#4f46e5'});
-            
+            if(!phone || phone.length < 9) return Swal.fire('Error', 'Nomor Tidak Valid', 'error');
             fullPhoneNumber = "+62" + phone;
-            
-            // Simulasi request OTP ke server WA 0857-1012-7234
-            await showLoading("Menghubungi Server WA 0857-1012-7234...");
-            
-            document.getElementById('displayTargetPhone').innerText = fullPhoneNumber;
-            document.getElementById('phoneStep').classList.add('hidden');
-            document.getElementById('otpStep').classList.remove('hidden');
-            otpInputs[0].focus();
-            
-            // Auto-fill demo
-            setTimeout(() => { otpInputs[0].value=1; otpInputs[1].value=2; otpInputs[2].value=3; otpInputs[3].value=4; }, 1500);
+            document.getElementById('phoneStep').classList.add('hidden'); document.getElementById('otpStep').classList.remove('hidden');
+            setTimeout(() => { otpInputs[0].value=1; otpInputs[1].value=2; otpInputs[2].value=3; otpInputs[3].value=4; }, 1000);
         }
 
-        async function verifyOTP() {
-            const otp = Array.from(otpInputs).map(i => i.value).join('');
-            if(otp !== '1234') return Swal.fire({icon: 'error', title: 'OTP Salah', text: 'Gunakan kode 1234', confirmButtonColor: '#4f46e5'});
-            
-            await showLoading("Memverifikasi Data Pelanggan...");
-            
+        function verifyOTP() {
+            if(Array.from(otpInputs).map(i => i.value).join('') !== '1234') return Swal.fire('Error', 'Gunakan 1234', 'error');
             localStorage.setItem('rizqiyya_cust_logged_in', 'true');
             localStorage.setItem('rizqiyya_cust_phone', fullPhoneNumber);
-            
-            // Nama dummy agar form pesanan otomatis terisi
-            const dummyName = "Pelanggan " + fullPhoneNumber.slice(-4);
-            localStorage.setItem('rizqiyya_cust_name', dummyName);
-
+            localStorage.setItem('rizqiyya_cust_name', "Pelanggan " + fullPhoneNumber.slice(-4));
             initApp();
         }
+        function logout() { localStorage.removeItem('rizqiyya_cust_logged_in'); window.location.reload(); }
 
-        function resetLogin() {
-            document.getElementById('otpStep').classList.add('hidden');
-            document.getElementById('phoneStep').classList.remove('hidden');
-            otpInputs.forEach(i => i.value = '');
+        function showBottomNav(show) {
+            document.getElementById('bottomNav').style.display = show ? 'block' : 'none';
+            document.getElementById('mainHeader').style.display = show ? 'block' : 'none';
+            if(!show) document.getElementById('mainContentArea').classList.replace('p-6', 'p-0');
+            else document.getElementById('mainContentArea').classList.replace('p-0', 'p-6');
         }
 
-        function logout() {
-            Swal.fire({
-                title: 'Keluar Akun?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#e11d48',
-                confirmButtonText: 'Keluar'
-            }).then((res) => {
-                if (res.isConfirmed) {
-                    localStorage.removeItem('rizqiyya_cust_logged_in');
-                    window.location.reload();
-                }
-            })
-        }
-
-        // --- NAVIGATION ---
         function switchView(viewId, btnEl = null) {
+            if(viewId !== 'chat') showBottomNav(true);
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById('view-' + viewId).classList.remove('hidden');
-            
             if(btnEl) {
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('nav-active', 'text-indigo-600');
-                    btn.classList.add('text-slate-400');
-                });
-                btnEl.classList.add('nav-active', 'text-indigo-600');
-                btnEl.classList.remove('text-slate-400');
+                document.querySelectorAll('.nav-btn').forEach(btn => { btn.classList.remove('nav-active', 'text-indigo-600'); btn.classList.add('text-slate-400'); });
+                btnEl.classList.add('nav-active', 'text-indigo-600'); btnEl.classList.remove('text-slate-400');
             }
+            if(viewId === 'chat') { showBottomNav(false); renderChat(); }
+            if(viewId === 'history') { loadHistory(); }
         }
 
-        // --- CORE APP LOGIC ---
         function initApp() {
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            
-            const name = localStorage.getItem('rizqiyya_cust_name') || "Pelanggan";
-            const phone = localStorage.getItem('rizqiyya_cust_phone');
-            
-            document.getElementById('customerNameDisplay').innerText = name;
-            document.getElementById('orderName').value = name; 
-
-            syncWithAdminDB(phone);
-            
-            // Dengarkan perubahan data dari Aplikasi Admin (Kasir & Kurir)
-            window.addEventListener('storage', (e) => {
-                if (e.key === 'rizqiyya_db_orders' || e.key === 'rizqiyya_pickup_requests') {
-                    syncWithAdminDB(phone);
-                }
+            document.getElementById('loginScreen').classList.add('hidden'); document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('customerNameDisplay').innerText = localStorage.getItem('rizqiyya_cust_name');
+            document.getElementById('orderName').value = localStorage.getItem('rizqiyya_cust_name'); 
+            syncWithAdminDB(); checkUnreadChats();
+            window.addEventListener('storage', (e) => { 
+                if(e.key === 'rizqiyya_db_orders' || e.key === 'rizqiyya_pickup_requests') syncWithAdminDB(); 
+                if(e.key === 'rizqiyya_live_chats') { renderChat(); checkUnreadChats(); }
             });
         }
 
-        function syncWithAdminDB(phone) {
-            const custName = localStorage.getItem('rizqiyya_cust_name');
-            
-            // 1. Cek Status Kurir (Penjemputan)
+        function syncWithAdminDB() {
+            const phone = localStorage.getItem('rizqiyya_cust_phone'), custName = localStorage.getItem('rizqiyya_cust_name');
             const requests = JSON.parse(localStorage.getItem('rizqiyya_pickup_requests')) || [];
             const myPickups = requests.filter(r => (r.name === custName || r.phone === phone) && r.status !== 'selesai');
             
-            const courierWidget = document.getElementById('courierStatusContainer');
-            if(myPickups.length > 0) {
-                courierWidget.classList.remove('hidden');
-                document.getElementById('activeCourierName').innerText = myPickups[0].courier;
-                // Simpan nomor kurir sementara untuk tombol chat
-                courierWidget.setAttribute('data-courier-phone', getCourierPhone(myPickups[0].courier));
-            } else {
-                courierWidget.classList.add('hidden');
-            }
+            if(myPickups.length > 0) { document.getElementById('courierStatusContainer').classList.remove('hidden'); document.getElementById('activeCourierName').innerText = myPickups[0].courier; }
+            else { document.getElementById('courierStatusContainer').classList.add('hidden'); }
 
-            // 2. Cek Status Pesanan di Kasir Toko
             const adminOrders = JSON.parse(localStorage.getItem('rizqiyya_db_orders')) || [];
             const myOrders = adminOrders.filter(o => o.customer === custName || o.phone === phone);
             
-            const orderContainer = document.getElementById('activeOrderContainer');
+            const oc = document.getElementById('activeOrderContainer');
+            if(myOrders.length === 0) { oc.innerHTML = `<div class="text-center p-5 bg-slate-50 rounded-xl border border-slate-100"><i class="fas fa-check-circle text-3xl text-slate-300 mb-2"></i><p class="text-sm text-slate-500 font-medium">Belum ada cucian aktif.</p></div>`; return; }
+            
+            const o = myOrders[myOrders.length - 1]; 
+            let statusBadge = o.status === 'menunggu_mesin' ? 'Antre Mesin' : (o.status === 'selesai' ? 'Selesai / Lunas' : 'Diproses');
+            
+            oc.innerHTML = `<div class="bg-slate-50 p-4 rounded-xl border border-indigo-100"><div class="flex justify-between items-start mb-3"><div><p class="text-[10px] text-slate-400 font-bold tracking-wider">${o.id}</p><p class="font-extrabold text-slate-800 text-sm mt-0.5">Pesanan Terakhir</p></div><span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase">${statusBadge}</span></div><div class="text-xs text-slate-500 mb-3 font-medium">${o.items.map(i => i.name).join(', ')}</div><div class="flex justify-between items-center pt-3 border-t"><p class="font-extrabold text-slate-800 text-sm">Rp ${o.total.toLocaleString()}</p></div></div>`;
+        }
+
+        function loadHistory() {
+            const phone = localStorage.getItem('rizqiyya_cust_phone'), custName = localStorage.getItem('rizqiyya_cust_name');
+            const adminOrders = JSON.parse(localStorage.getItem('rizqiyya_db_orders')) || [];
+            const myOrders = adminOrders.filter(o => o.customer === custName || o.phone === phone).reverse();
+            
+            const hc = document.getElementById('historyContainer');
             if(myOrders.length === 0) {
-                orderContainer.innerHTML = `
-                    <div class="text-center p-5 bg-slate-50 rounded-xl border border-slate-100">
-                        <i class="fas fa-check-circle text-3xl text-slate-300 mb-2"></i>
-                        <p class="text-sm text-slate-500 font-medium">Belum ada cucian yang sedang diproses kasir.</p>
-                    </div>`;
+                hc.innerHTML = `<div class="text-center p-6 bg-white rounded-[2rem] border"><i class="fas fa-history text-4xl text-slate-200 mb-3"></i><p class="text-sm text-slate-500">Anda belum memiliki riwayat transaksi.</p></div>`;
                 return;
             }
 
-            // Tampilkan Pesanan Terakhir
-            const o = myOrders[myOrders.length - 1]; 
-            
-            let statusBadge = '';
-            if(o.status === 'menunggu_mesin') statusBadge = '<span class="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase">Antre Mesin</span>';
-            else if(o.status === 'diproses') statusBadge = '<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase">Dicuci</span>';
-            else statusBadge = '<span class="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-1 rounded-full font-bold uppercase">Selesai / Lunas</span>';
-
-            orderContainer.innerHTML = `
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 shadow-sm">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <p class="text-[10px] text-slate-400 font-bold tracking-wider">${o.id}</p>
-                            <p class="font-extrabold text-slate-800 text-sm mt-0.5">Pesanan Anda</p>
-                        </div>
-                        ${statusBadge}
+            let html = '';
+            myOrders.forEach(o => {
+                let dateStr = o.date ? new Date(o.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'short', year: 'numeric'}) : '-';
+                html += `
+                <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col gap-3">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                        <span class="text-xs font-bold text-slate-400">${o.id}</span>
+                        <span class="text-xs font-bold text-slate-400"><i class="far fa-calendar-alt"></i> ${dateStr}</span>
                     </div>
-                    <div class="text-xs text-slate-500 mb-3 font-medium">${o.items.map(i => i.name + ' (' + i.qty + ')').join(', ')}</div>
-                    <div class="flex justify-between items-center pt-3 border-t border-slate-200">
-                        <div>
-                            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">Tagihan Kasir</p>
-                            <p class="font-extrabold text-slate-800 text-sm">Rp ${o.total.toLocaleString('id-ID')}</p>
-                        </div>
-                        <button onclick="simulatePayment()" class="text-[10px] bg-slate-800 text-white px-4 py-2 rounded-lg shadow-sm hover:bg-slate-700 font-bold"><i class="fas fa-qrcode mr-1"></i> Bayar QRIS</button>
+                    <div>
+                        <p class="text-sm font-bold text-slate-700">${o.items.map(i => i.name).join(', ')}</p>
+                        <p class="text-xs text-slate-500 mt-1">Total Berat: ${o.weight} Kg</p>
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-lg text-xs font-bold border border-emerald-100">Berhasil</span>
+                        <span class="font-extrabold text-slate-800">Rp ${o.total.toLocaleString()}</span>
                     </div>
                 </div>`;
+            });
+            hc.innerHTML = html;
         }
 
-        /* --- FITUR PEMESANAN (ORDER TO ADMIN) --- */
-        async function submitOrderOnline() {
-            const name = document.getElementById('orderName').value;
-            const address = document.getElementById('orderAddress').value;
-            const time = document.getElementById('orderTime').value;
-            const courierRaw = document.getElementById('orderCourier').value;
+        function submitOrderOnline() {
+            const name = document.getElementById('orderName').value, address = document.getElementById('orderAddress').value;
+            const time = document.getElementById('orderTime').value, courierName = document.getElementById('orderCourier').value.split('|')[1];
             const phone = localStorage.getItem('rizqiyya_cust_phone');
+            if(!name || !address) return Swal.fire('Data Belum Lengkap', 'Isi nama dan alamat.', 'warning');
 
-            if(!name || !address) return Swal.fire('Data Belum Lengkap', 'Mohon isi nama dan alamat penjemputan.', 'warning');
-
-            const courierName = courierRaw.split('|')[1];
-
-            await showLoading("Menghubungi Server Toko...", 1500);
-
-            // 1. KIRIM DATA KE RADAR KURIR DI WEB ADMIN
             let requests = JSON.parse(localStorage.getItem('rizqiyya_pickup_requests')) || [];
-            requests.push({
-                id: 'REQ-' + Math.floor(1000 + Math.random()*9000),
-                type: 'JEMPUT', name: name, phone: phone, address: address, time: time, courier: courierName, status: 'pending'
-            });
+            requests.push({ id: 'REQ-' + Math.floor(1000 + Math.random()*9000), name, phone, address, time, courier: courierName, status: 'pending' });
             localStorage.setItem('rizqiyya_pickup_requests', JSON.stringify(requests));
 
-            // 2. KIRIM DATA KE DRAFT KASIR (POS) DI WEB ADMIN
             let drafts = JSON.parse(localStorage.getItem('rizqiyya_pos_drafts')) || [];
-            drafts.push({ name: name, phone: phone });
-            localStorage.setItem('rizqiyya_pos_drafts', JSON.stringify(drafts));
+            drafts.push({ name, phone }); localStorage.setItem('rizqiyya_pos_drafts', JSON.stringify(drafts));
 
-            // 3. Update Tampilan Customer
-            Swal.fire({
-                icon: 'success',
-                title: 'Kurir Segera Datang!',
-                html: `<p class="text-sm">Kurir <b>${courierName}</b> akan menuju lokasi Anda.<br>Data pesanan otomatis masuk ke sistem kasir pusat.</p>`,
-                confirmButtonColor: '#4f46e5'
-            }).then(() => {
-                document.getElementById('orderAddress').value = '';
-                switchView('home', document.querySelectorAll('.nav-btn')[0]);
-                syncWithAdminDB(phone); // Refresh status
+            Swal.fire('Berhasil!', `Kurir ${courierName} akan menjemput.`, 'success').then(() => {
+                document.getElementById('orderAddress').value = ''; switchView('home', document.querySelectorAll('.nav-btn')[0]); syncWithAdminDB();
             });
         }
 
-        function getCourierPhone(name) {
-            if(name === 'Hafiz') return '6285701994169';
-            if(name === 'Nizar') return '6287886000529';
-            if(name === 'Khotif') return '6282135313693';
-            return '6281212345232'; // fallback admin
-        }
-
-        function chatCourier() {
-            const phone = document.getElementById('courierStatusContainer').getAttribute('data-courier-phone');
-            const custName = localStorage.getItem('rizqiyya_cust_name');
-            window.location.href = `https://wa.me/${phone}?text=Halo, saya ${custName}. Apakah sudah jalan untuk pick-up cucian saya?`;
-        }
-
-        function simulatePayment() {
+        // --- SISTEM LIVE CHAT CS ---
+        function openCSOptions() {
             Swal.fire({
-                title: 'Scan QRIS Pembayaran',
-                html: '<div class="w-full h-48 bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed border-slate-300 mb-2"><i class="fas fa-qrcode text-6xl text-slate-400"></i></div><p class="text-xs text-slate-500 font-bold">Simulasi Gateway...</p>',
-                showConfirmButton: false, timer: 2000
-            }).then(() => {
-                Swal.fire({icon: 'success', title: 'Lunas!', text: 'Admin toko telah menerima pembayaran Anda.', confirmButtonColor: '#10b981'});
+                title: '<span class="text-lg">Hubungi Customer Service</span>',
+                html: `
+                    <div class="flex flex-col gap-3 mt-2">
+                        <button onclick="window.open('https://wa.me/6281212345232', '_blank')" class="bg-emerald-50 text-emerald-700 border border-emerald-200 p-4 rounded-2xl font-bold flex items-center justify-center transition-colors hover:bg-emerald-100"><i class="fab fa-whatsapp text-2xl mr-3 text-emerald-500"></i> Chat Admin 1 (WA)</button>
+                        <button onclick="window.open('https://wa.me/6285292935512', '_blank')" class="bg-emerald-50 text-emerald-700 border border-emerald-200 p-4 rounded-2xl font-bold flex items-center justify-center transition-colors hover:bg-emerald-100"><i class="fab fa-whatsapp text-2xl mr-3 text-emerald-500"></i> Chat Admin 2 (WA)</button>
+                        <div class="text-xs text-slate-400 font-bold my-1">ATAU</div>
+                        <button onclick="Swal.close(); openLiveChat();" class="bg-indigo-600 text-white shadow-lg shadow-indigo-200 p-4 rounded-2xl font-bold flex items-center justify-center transition-all hover:bg-indigo-700"><i class="fas fa-comments text-2xl mr-3"></i> Live Chat Web (App)</button>
+                    </div>
+                `,
+                showConfirmButton: false, showCloseButton: true
             });
         }
 
-        function copyReferral() {
-            navigator.clipboard.writeText("RIZ-CUST-99");
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Tersalin!', showConfirmButton: false, timer: 1500 });
+        function openLiveChat() {
+            switchView('chat');
+            let chats = JSON.parse(localStorage.getItem('rizqiyya_live_chats')) || {};
+            const phone = localStorage.getItem('rizqiyya_cust_phone');
+            if(chats[phone]) { chats[phone].unreadCustomer = 0; localStorage.setItem('rizqiyya_live_chats', JSON.stringify(chats)); }
+            checkUnreadChats();
         }
 
-        // Init App On Load
-        window.onload = () => {
-            if(localStorage.getItem('rizqiyya_cust_logged_in') === 'true') initApp();
-        };
+        function renderChat() {
+            if(document.getElementById('view-chat').classList.contains('hidden')) return;
+            const phone = localStorage.getItem('rizqiyya_cust_phone');
+            let chats = JSON.parse(localStorage.getItem('rizqiyya_live_chats')) || {};
+            let html = '';
+            
+            if(chats[phone] && chats[phone].messages) {
+                chats[phone].messages.forEach(m => {
+                    if(m.sender === 'customer') {
+                        html += `<div class="flex justify-end"><div class="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-sm max-w-[80%] text-sm shadow-sm">${m.text}</div></div>`;
+                    } else {
+                        html += `<div class="flex justify-start"><div class="bg-white border border-slate-200 text-slate-700 p-3 rounded-2xl rounded-tl-sm max-w-[80%] text-sm shadow-sm">${m.text}</div></div>`;
+                    }
+                });
+            } else {
+                html = `<div class="text-center text-xs text-slate-400 mt-10">Kirim pesan pertama Anda. Admin akan membalas secara langsung.</div>`;
+            }
+            
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = html; container.scrollTop = container.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const phone = localStorage.getItem('rizqiyya_cust_phone'), name = localStorage.getItem('rizqiyya_cust_name');
+            let chats = JSON.parse(localStorage.getItem('rizqiyya_live_chats')) || {};
+            
+            if(!chats[phone]) chats[phone] = { name: name, messages: [], unreadAdmin: 0, unreadCustomer: 0 };
+            
+            chats[phone].messages.push({ sender: 'customer', text: text, time: Date.now() });
+            chats[phone].unreadAdmin += 1;
+            chats[phone].lastUpdated = Date.now();
+            
+            localStorage.setItem('rizqiyya_live_chats', JSON.stringify(chats));
+            input.value = ''; renderChat();
+        }
+
+        function checkUnreadChats() {
+            const phone = localStorage.getItem('rizqiyya_cust_phone');
+            let chats = JSON.parse(localStorage.getItem('rizqiyya_live_chats')) || {};
+            if(chats[phone] && chats[phone].unreadCustomer > 0) document.getElementById('notifBadgeChat').classList.remove('hidden');
+            else document.getElementById('notifBadgeChat').classList.add('hidden');
+        }
+
+        window.onload = () => { if(localStorage.getItem('rizqiyya_cust_logged_in') === 'true') initApp(); };
     </script>
 </body>
 </html>
