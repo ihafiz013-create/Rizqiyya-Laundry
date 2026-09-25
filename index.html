@@ -1,706 +1,415 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rizqiyya Laundry - Modern Laundry Services & POS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rizqiyya Laundry - Customer Portal</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- PWA Setup -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://via.placeholder.com/192x192.png?text=RL">
     
+    <!-- Tailwind & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Poppins', 'sans-serif'],
-                        mono: ['Space Mono', 'monospace'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            400: '#60a5fa',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            900: '#1e3a8a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Alerts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        body { font-family: 'Poppins', sans-serif; background-color: #f8fafc; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
+        .stamp-box { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; border: 2px dashed #93c5fd; }
+        .stamp-box.active { background-color: #3b82f6; color: white; border: none; box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.5); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
         
-        .custom-input { transition: all 0.2s ease; }
-        .custom-input:focus {
-            outline: none; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
-
-        /* Toast notification */
-        #toast {
-            visibility: hidden; opacity: 0; transition: all 0.3s;
-            transform: translateY(20px) translateX(-50%); left: 50%;
-        }
-        #toast.show { visibility: visible; opacity: 1; transform: translateY(0) translateX(-50%); }
-
-        /* Bulletproof Print Styles */
-        @media print {
-            /* Hide absolutely everything not related to printing */
-            body * {
-                visibility: hidden;
-            }
-            
-            /* Show only the print area and its contents */
-            #print-area, #print-area * {
-                visibility: visible;
-            }
-            
-            /* Position print area at the absolute top left of the printed page */
-            #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 10px;
-                background: white;
-                color: black;
-                font-family: 'Space Mono', monospace !important;
-            }
-            
-            /* Force hide main UI elements explicitly to prevent layout shifting */
-            #main-app, #admin-dashboard, nav, footer, #toast {
-                display: none !important;
-            }
-        }
+        /* Loading Overlay */
+        #loadingOverlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.9); z-index: 1000; align-items: center; justify-content: center; flex-direction: column; }
+        .spinner { border: 4px solid #e5e7eb; border-top: 4px solid #2563eb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="text-gray-800 antialiased overflow-x-hidden">
+<body class="text-gray-800">
 
-    <nav class="fixed w-full z-40 transition-all duration-300 backdrop-blur-md bg-white/90 border-b border-gray-100 py-4" id="navbar">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 rounded-xl bg-brand-500 text-white flex items-center justify-center text-xl shadow-lg shadow-brand-500/30">
-                        <i class="fa-solid fa-soap"></i>
-                    </div>
-                    <span class="font-bold text-2xl tracking-tight text-brand-900">Rizqiyya<span class="text-brand-500">Laundry</span></span>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-6">
-                    <a href="#home" class="text-gray-600 hover:text-brand-600 font-medium cursor-pointer" onclick="showMainApp()">Home</a>
-                    <a href="#pricing" class="text-gray-600 hover:text-brand-600 font-medium cursor-pointer" onclick="showMainApp()">Harga</a>
-                    <a href="#pickup" class="text-gray-600 hover:text-brand-600 font-medium cursor-pointer" onclick="showMainApp()">Jemput</a>
-                    <a href="#order" class="bg-brand-600 text-white px-5 py-2 rounded-full font-medium hover:bg-brand-700 transition-colors shadow-md cursor-pointer" onclick="showMainApp()">Pesan</a>
-                    <button onclick="toggleDashboard()" class="text-gray-400 hover:text-brand-600 ml-4 border-l pl-4 border-gray-200 focus:outline-none">
-                        <i class="fa-solid fa-chart-line"></i> Admin
-                    </button>
-                </div>
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay">
+        <div class="spinner mb-4"></div>
+        <p class="text-blue-600 font-semibold animate-pulse">Menghubungkan ke Server...</p>
+    </div>
 
-                <div class="md:hidden flex items-center gap-4">
-                    <button onclick="toggleDashboard()" class="text-gray-500 focus:outline-none"><i class="fa-solid fa-chart-line"></i></button>
-                    <button id="mobile-menu-btn" class="text-gray-600 focus:outline-none"><i class="fa-solid fa-bars text-2xl"></i></button>
-                </div>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-blue-500 to-blue-700">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+            <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-tshirt text-4xl text-blue-600"></i>
             </div>
-        </div>
-
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="md:hidden hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-lg">
-            <div class="px-4 pt-2 pb-6 flex flex-col space-y-2">
-                <a href="#home" onclick="closeMobileMenu(); showMainApp();" class="block px-3 py-3 text-gray-700 hover:bg-brand-50 rounded-lg">Home</a>
-                <a href="#pricing" onclick="closeMobileMenu(); showMainApp();" class="block px-3 py-3 text-gray-700 hover:bg-brand-50 rounded-lg">Harga</a>
-                <a href="#pickup" onclick="closeMobileMenu(); showMainApp();" class="block px-3 py-3 text-gray-700 hover:bg-brand-50 rounded-lg">Jemput Laundry</a>
-                <a href="#order" onclick="closeMobileMenu(); showMainApp();" class="block px-3 py-3 text-center bg-brand-600 text-white rounded-lg mt-2">Pesan Sekarang</a>
-            </div>
-        </div>
-    </nav>
-
-    <div id="main-app">
-        
-        <!-- Hero Section -->
-        <section id="home" class="pt-32 pb-16 bg-brand-50 relative overflow-hidden">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-brand-700 text-sm font-semibold mb-6">
-                    <i class="fa-solid fa-check-circle"></i> Laundry Cepat, Bersih, Wangi
+            <h1 class="text-2xl font-bold text-gray-800 mb-2">Rizqiyya Laundry</h1>
+            <p class="text-gray-500 mb-6 text-sm">Masuk untuk mengelola cucian dan melihat poin loyalitas Anda.</p>
+            
+            <div id="phoneStep">
+                <div class="flex items-center border-2 border-gray-200 rounded-xl overflow-hidden mb-4 focus-within:border-blue-500 transition-colors">
+                    <span class="bg-gray-100 px-4 py-3 font-semibold text-gray-600">+62</span>
+                    <input type="tel" id="loginPhone" placeholder="81234567890" class="w-full px-4 py-3 outline-none" autocomplete="off">
                 </div>
-                <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">
-                    Solusi Pakaian Bersih <br> <span class="text-brand-600">Tanpa Repot</span>
-                </h1>
-                <p class="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-                    Rizqiyya Laundry siap melayani cuci kiloan, bedcover, dan lainnya. Nikmati layanan antar-jemput dan sistem pemesanan online kami.
-                </p>
-                <div class="flex justify-center gap-4">
-                    <a href="#order" class="bg-brand-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-700 transition shadow-lg inline-block">Pesan Sekarang</a>
-                    <a href="#pickup" class="bg-white text-brand-600 border border-brand-200 px-8 py-3 rounded-full font-semibold hover:bg-brand-50 transition shadow-sm inline-block">Request Jemput</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="pricing" class="py-20 bg-white">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-900 mb-4">Daftar Harga</h2>
-                    <p class="text-gray-600">Kualitas premium dengan harga yang sangat terjangkau.</p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Kiloan -->
-                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:shadow-md transition">
-                        <div class="w-full h-1 bg-brand-500 rounded-t-full mb-4"></div>
-                        <h4 class="text-xl font-bold mb-4">Paket Kiloan</h4>
-                        <ul class="space-y-3 mb-6 text-sm">
-                            <li class="flex justify-between border-b border-gray-200 pb-2"><span>Setrika</span> <span class="font-bold">7.000/kg</span></li>
-                            <li class="flex justify-between border-b border-gray-200 pb-2"><span>Cuci Kering</span> <span class="font-bold">7.000/kg</span></li>
-                            <li class="flex justify-between pb-2"><span>Cuci Setrika</span> <span class="font-bold">9.000/kg</span></li>
-                        </ul>
-                    </div>
-                    <!-- Bedcover -->
-                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:shadow-md transition">
-                        <div class="w-full h-1 bg-indigo-500 rounded-t-full mb-4"></div>
-                        <h4 class="text-xl font-bold mb-4">Bedcover</h4>
-                        <ul class="space-y-3 mb-6 text-sm">
-                            <li class="flex justify-between border-b border-gray-200 pb-2"><span>Kecil</span> <span class="font-bold">35.000</span></li>
-                            <li class="flex justify-between pb-2"><span>Gede</span> <span class="font-bold">45.000</span></li>
-                        </ul>
-                    </div>
-                    <!-- Selimut -->
-                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:shadow-md transition">
-                        <div class="w-full h-1 bg-teal-500 rounded-t-full mb-4"></div>
-                        <h4 class="text-xl font-bold mb-4">Selimut</h4>
-                        <ul class="space-y-3 mb-6 text-sm">
-                            <li class="flex justify-between border-b border-gray-200 pb-2"><span>Kecil</span> <span class="font-bold">15.000</span></li>
-                            <li class="flex justify-between pb-2"><span>Gede</span> <span class="font-bold">30.000</span></li>
-                        </ul>
-                    </div>
-                    <!-- Sprei -->
-                    <div class="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:shadow-md transition">
-                        <div class="w-full h-1 bg-purple-500 rounded-t-full mb-4"></div>
-                        <h4 class="text-xl font-bold mb-4">Sprei</h4>
-                        <ul class="space-y-3 mb-6 text-sm">
-                            <li class="flex justify-between border-b border-gray-200 pb-2"><span>Kecil</span> <span class="font-bold">15.000</span></li>
-                            <li class="flex justify-between pb-2"><span>Gede</span> <span class="font-bold">30.000</span></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="pickup" class="py-20 bg-brand-50 border-t border-brand-100">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
-                    <div class="text-center mb-8">
-                        <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
-                            <i class="fa-solid fa-motorcycle"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-gray-900">Request Jemput Laundry</h3>
-                        <p class="text-gray-500 text-sm mt-2">Malas keluar rumah? Kurir kami siap menjemput cucian Anda.</p>
-                    </div>
-
-                    <form id="pickupForm" class="space-y-5">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-                                <input type="text" id="pickupName" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Nama Anda">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">No WhatsApp</label>
-                                <input type="tel" id="pickupWA" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="0812...">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Penjemputan Lengkap</label>
-                            <textarea id="pickupAddress" rows="2" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="Jl. Raya... RT/RW..."></textarea>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kurir</label>
-                            <select id="pickupCourier" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                                <option value="" disabled selected>-- Pilih Kurir --</option>
-                                <option value="6285701994169|Hafiz">Hafiz</option>
-                                <option value="6287886000529|Nizar">Nizar</option>
-                                <option value="6282135313693|Khotif">Khotif</option>
-                            </select>
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition flex items-center justify-center gap-2">
-                            Kirim Request <i class="fa-brands fa-whatsapp text-xl"></i>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <section id="order" class="py-20 bg-white">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h3 class="text-3xl font-bold text-center text-gray-900 mb-10">Form Pemesanan & Estimasi</h3>
-                
-                <form id="orderForm" class="bg-white border border-gray-100 shadow-2xl rounded-3xl p-8 space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                            <input type="text" id="orderName" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">No WhatsApp</label>
-                            <input type="tel" id="orderWA" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
-                        <textarea id="orderAddress" rows="2" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50"></textarea>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Layanan</label>
-                            <select id="orderService" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                                <option value="" disabled selected>-- Pilih Layanan --</option>
-                                <optgroup label="Paket Kiloan">
-                                    <option value="kiloan-setrika" data-price="7000" data-type="kg">Setrika (Rp 7.000/kg)</option>
-                                    <option value="kiloan-kering" data-price="7000" data-type="kg">Cuci Kering (Rp 7.000/kg)</option>
-                                    <option value="kiloan-cucisetrika" data-price="9000" data-type="kg">Cuci Setrika (Rp 9.000/kg)</option>
-                                </optgroup>
-                                <optgroup label="Bedcover">
-                                    <option value="bedcover-kecil" data-price="35000" data-type="pcs">Bedcover Kecil (Rp 35.000)</option>
-                                    <option value="bedcover-gede" data-price="45000" data-type="pcs">Bedcover Gede (Rp 45.000)</option>
-                                </optgroup>
-                                <optgroup label="Selimut">
-                                    <option value="selimut-kecil" data-price="15000" data-type="pcs">Selimut Kecil (Rp 15.000)</option>
-                                    <option value="selimut-gede" data-price="30000" data-type="pcs">Selimut Gede (Rp 30.000)</option>
-                                </optgroup>
-                                <optgroup label="Sprei">
-                                    <option value="sprei-kecil" data-price="15000" data-type="pcs">Sprei Kecil (Rp 15.000)</option>
-                                    <option value="sprei-gede" data-price="30000" data-type="pcs">Sprei Gede (Rp 30.000)</option>
-                                </optgroup>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (<span id="qtyLabel">Kg/Pcs</span>)</label>
-                            <input type="number" id="orderQty" min="1" value="1" step="0.1" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Metode Pembayaran</label>
-                            <select id="orderPayment" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                                <option value="Tunai">Tunai</option>
-                                <option value="QRIS">QRIS</option>
-                                <option value="Debit">Debit</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Admin Tujuan</label>
-                            <select id="orderAdmin" required class="custom-input w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-                                <option value="6281212345232|Admin 1 (Owner)">Admin 1 (Owner)</option>
-                                <option value="6285701994169|Admin 2">Admin 2</option>
-                                <option value="6285292935512|Admin 3">Admin 3</option>
-                                <option value="6285814073546|Admin 4">Admin 4</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Total Estimasi -->
-                    <div class="bg-brand-50 border border-brand-100 rounded-xl p-4 flex justify-between items-center">
-                        <span class="font-medium text-brand-800">Estimasi Total Biaya:</span>
-                        <span class="text-2xl font-bold text-brand-600" id="orderTotalDisplay">Rp 0</span>
-                    </div>
-
-                    <button type="submit" class="w-full bg-brand-600 text-white font-bold py-4 rounded-xl hover:bg-brand-700 transition shadow-lg flex justify-center items-center gap-2 text-lg">
-                        Pesan Sekarang <i class="fa-brands fa-whatsapp"></i>
-                    </button>
-                </form>
-            </div>
-        </section>
-
-        <footer class="bg-gray-900 text-gray-300 py-10 border-t border-gray-800">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
-                <div>
-                    <h3 class="font-bold text-xl text-white">Rizqiyya Laundry</h3>
-                    <p class="text-sm mt-1"><i class="fa-solid fa-location-dot"></i> Jalan Asem Baris Raya No 22</p>
-                </div>
-                <div class="flex flex-col items-center md:items-end gap-2">
-                    <p class="text-sm">Hubungi Kami (Owner):</p>
-                    <a href="https://wa.me/6281212345232" target="_blank" class="w-12 h-12 rounded-full bg-[#25D366] text-white flex items-center justify-center text-xl hover:scale-110 transition shadow-lg">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </a>
-                </div>
-            </div>
-        </footer>
-    </div> <!-- End Main App -->
-
-    <div id="admin-dashboard" class="hidden min-h-screen bg-gray-50 pt-24 pb-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900"><i class="fa-solid fa-chart-line text-brand-500 mr-2"></i> Dashboard POS Admin</h2>
-                <button onclick="showMainApp()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition">
-                    <i class="fa-solid fa-arrow-left"></i> Kembali ke Web
+                <button onclick="requestOTP()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg">
+                    Kirim Kode OTP via WhatsApp
                 </button>
             </div>
 
-            <!-- Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-money-bill-wave"></i></div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Omset Hari Ini</p>
-                        <h3 class="text-2xl font-bold text-gray-900" id="dashOmset">Rp 0</h3>
-                    </div>
+            <div id="otpStep" class="hidden">
+                <p class="text-sm text-gray-600 mb-4">Kode 4 digit telah dikirim ke WhatsApp Anda. (Demo: Masukkan 1234)</p>
+                <div class="flex justify-center gap-2 mb-6">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
+                    <input type="text" maxlength="1" class="otp-input w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none">
                 </div>
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-weight-hanging"></i></div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Laundry Kiloan</p>
-                        <h3 class="text-2xl font-bold text-gray-900" id="dashKg">0 Kg</h3>
-                    </div>
-                </div>
-                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div class="w-14 h-14 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-shirt"></i></div>
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Item Satuan</p>
-                        <h3 class="text-2xl font-bold text-gray-900" id="dashPcs">0 Pcs</h3>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table & Actions -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="p-4 md:p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <h3 class="text-xl font-bold">Pesanan Hari Ini</h3>
-                    <div class="flex flex-wrap gap-2">
-                        <button onclick="clearOrders()" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition"><i class="fa-solid fa-trash"></i> Reset Data</button>
-                        <button onclick="tutupKasir()" class="px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 text-sm font-bold shadow-md transition"><i class="fa-solid fa-file-invoice"></i> Tutup Kasir & Kirim Laporan</button>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-gray-50 text-gray-600">
-                            <tr>
-                                <th class="p-4 font-medium">Jam</th>
-                                <th class="p-4 font-medium">Pelanggan</th>
-                                <th class="p-4 font-medium">Layanan</th>
-                                <th class="p-4 font-medium">Qty</th>
-                                <th class="p-4 font-medium">Total</th>
-                                <th class="p-4 font-medium">Bayar</th>
-                                <th class="p-4 font-medium text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orderTableBody" class="divide-y divide-gray-100">
-                            <!-- Populated via JS -->
-                        </tbody>
-                    </table>
-                </div>
+                <button onclick="verifyOTP()" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg">
+                    Verifikasi & Masuk
+                </button>
+                <button onclick="resetLogin()" class="w-full mt-3 text-gray-500 text-sm hover:text-gray-700">Ganti Nomor</button>
             </div>
         </div>
     </div>
 
-    <div id="print-area" class="hidden">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="margin: 0; font-size: 24px; font-weight: bold;">RIZQIYYA LAUNDRY</h2>
-            <p style="margin: 5px 0 0 0; font-size: 14px;">Jl. Asem Baris Raya No 22</p>
-            <p style="margin: 0 0 10px 0; font-size: 14px;">Telp: +62 812-1234-5232</p>
-            <hr style="border-top: 1px dashed black; margin-bottom: 15px;">
-        </div>
-        <div id="print-content" style="font-size: 16px; line-height: 1.6;">
-            <!-- Content injected via JS -->
-        </div>
-        <div style="text-align: center; margin-top: 30px;">
-            <hr style="border-top: 1px dashed black; margin-bottom: 15px;">
-            <p style="margin: 0; font-size: 14px;">Terima kasih atas kepercayaan Anda!</p>
-            <p style="margin: 5px 0 0 0; font-size: 12px;">Layanan Laundry Cepat & Bersih</p>
-        </div>
+    <!-- MAIN APP SCREEN (Hidden by default) -->
+    <div id="mainApp" class="hidden pb-20">
+        
+        <!-- Header -->
+        <header class="bg-blue-600 text-white p-6 rounded-b-3xl shadow-lg relative overflow-hidden">
+            <div class="relative z-10 flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-sm font-medium opacity-80">Selamat Datang,</h2>
+                    <h1 class="text-2xl font-bold" id="customerNameDisplay">Pelanggan Setia</h1>
+                </div>
+                <button onclick="logout()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex justify-between items-center bg-white/10 p-4 rounded-2xl backdrop-blur-md">
+                <div>
+                    <p class="text-xs opacity-80 mb-1">Poin Aktif</p>
+                    <p class="text-xl font-bold"><i class="fas fa-star text-yellow-300 mr-1"></i> <span id="pointDisplay">250</span></p>
+                </div>
+                <div class="h-8 w-px bg-white/30"></div>
+                <div>
+                    <p class="text-xs opacity-80 mb-1">Cucian Selesai</p>
+                    <p class="text-xl font-bold"><i class="fas fa-check-circle text-green-300 mr-1"></i> <span id="orderCountDisplay">12</span></p>
+                </div>
+            </div>
+        </header>
+
+        <main class="p-4 space-y-6 -mt-4 relative z-20">
+            
+            <!-- Order Tracking (Real-time Sync) -->
+            <section class="glass-card p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-radar text-blue-500 mr-2"></i>Status Cucian Aktif</h3>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-semibold animate-pulse" id="syncStatus"><i class="fas fa-wifi mr-1"></i>Live</span>
+                </div>
+                <div id="activeOrderContainer">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <p class="text-xs text-gray-500">ID: #INV-001</p>
+                                <p class="font-bold text-gray-800">Cuci Komplit (3 Kg)</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-semibold" id="orderStatusBadge">Sedang Dicuci</span>
+                        </div>
+                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-blue-200">
+                            <div>
+                                <p class="text-xs text-gray-500">Status Pembayaran</p>
+                                <p class="font-bold text-red-500 text-sm" id="paymentStatusBadge">BELUM LUNAS</p>
+                            </div>
+                            <button onclick="simulatePayment()" class="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-blue-700 transition"><i class="fas fa-qrcode mr-1"></i> Bayar QRIS</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loyalty Stamp Card -->
+            <section class="bg-white p-5 rounded-2xl shadow-sm">
+                <h3 class="font-bold text-gray-800 mb-1"><i class="fas fa-award text-yellow-500 mr-2"></i>Kartu Stempel Digital</h3>
+                <p class="text-xs text-gray-500 mb-4">Kumpulkan 5 stempel untuk Gratis Cuci 2 Kg!</p>
+                <div class="flex justify-between items-center mb-2">
+                    <div class="stamp-box active"><i class="fas fa-check"></i></div>
+                    <div class="stamp-box active"><i class="fas fa-check"></i></div>
+                    <div class="stamp-box active"><i class="fas fa-check"></i></div>
+                    <div class="stamp-box text-gray-300">4</div>
+                    <div class="stamp-box text-gray-300 bg-yellow-50"><i class="fas fa-gift text-yellow-400"></i></div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-4">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                </div>
+            </section>
+
+            <!-- Request Pickup (Auto API Integration) -->
+            <section class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-2xl text-white shadow-lg">
+                <h3 class="font-bold text-lg mb-2"><i class="fas fa-motorcycle mr-2"></i>Jemput Cucian Sekarang</h3>
+                <p class="text-sm opacity-90 mb-4">Pilih jadwal dan kurir, sistem akan otomatis menjadwalkan ke toko.</p>
+                
+                <div class="space-y-3">
+                    <input type="text" id="pickupAddress" placeholder="Alamat Lengkap (Rt/Rw)" class="w-full px-4 py-2.5 rounded-xl text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-300">
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <select id="pickupTime" class="w-full px-4 py-2.5 rounded-xl text-gray-800 text-sm outline-none">
+                            <option value="">Pilih Waktu</option>
+                            <option value="Pagi (08:00-11:00)">Pagi (08:00-11:00)</option>
+                            <option value="Siang (13:00-15:00)">Siang (13:00-15:00)</option>
+                            <option value="Sore (16:00-18:00)">Sore (16:00-18:00)</option>
+                        </select>
+                        <select id="pickupCourier" class="w-full px-4 py-2.5 rounded-xl text-gray-800 text-sm outline-none">
+                            <option value="">Pilih Kurir</option>
+                            <option value="Hafiz">Hafiz</option>
+                            <option value="Nizar">Nizar</option>
+                            <option value="Khotif">Khotif</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="submitPickup()" class="w-full bg-white text-blue-700 font-bold py-3 rounded-xl mt-2 shadow hover:bg-gray-100 transition flex items-center justify-center">
+                        <i class="fas fa-paper-plane mr-2"></i> Jadwalkan Otomatis (API)
+                    </button>
+                </div>
+            </section>
+
+            <!-- AI Stain Analyzer -->
+            <section class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-800"><i class="fas fa-magic text-purple-500 mr-2"></i>Konsultasi Noda AI</h3>
+                    <span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-1 rounded">Powered by Gemini</span>
+                </div>
+                <p class="text-xs text-gray-500 mb-4">Unggah foto baju kotor Anda, AI kami akan merekomendasikan penanganan terbaik.</p>
+                <div class="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:bg-gray-50" onclick="simulateAI()">
+                    <i class="fas fa-camera text-3xl text-gray-400 mb-2"></i>
+                    <p class="text-sm font-medium text-gray-600">Ambil Foto Noda</p>
+                </div>
+            </section>
+            
+            <!-- Referral -->
+            <section class="bg-green-50 border border-green-100 p-5 rounded-2xl text-center">
+                <h3 class="font-bold text-green-800 mb-1"><i class="fas fa-gift mr-2"></i>Program Referral</h3>
+                <p class="text-xs text-green-700 mb-3">Bagikan kode ini, dapatkan saldo Rp 10.000!</p>
+                <div class="flex items-center justify-center gap-2">
+                    <div class="bg-white px-4 py-2 rounded-lg font-mono font-bold tracking-wider text-gray-800 shadow-inner">RIZ-CUST-99</div>
+                    <button class="bg-green-500 text-white w-10 h-10 rounded-lg shadow-sm hover:bg-green-600" onclick="copyReferral()"><i class="fas fa-copy"></i></button>
+                </div>
+            </section>
+
+        </main>
     </div>
 
-    <!-- Custom Toast -->
-    <div id="toast" class="fixed top-20 z-50 bg-gray-900 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3">
-        <i class="fa-solid fa-circle-info text-blue-400"></i> <span id="toast-msg" class="text-sm">Notifikasi</span>
-    </div>
-
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // State Management
-        let orders = JSON.parse(localStorage.getItem('rizqiyya_orders')) || [];
-        let currentTotal = 0;
-
-        // Utilities
-        const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+        // --- System 1: Login & Authentication (OTP Simulation) ---
+        let userPhone = "";
         
-        const showToast = (msg) => {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        // Mobile Menu Logic
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-
-        function closeMobileMenu() {
-            if (!mobileMenu.classList.contains('hidden')) {
-                mobileMenu.classList.add('hidden');
-            }
-        }
-
-        // View Navigation Logic
-        function showMainApp() {
-            document.getElementById('main-app').classList.remove('hidden');
-            document.getElementById('admin-dashboard').classList.add('hidden');
-            window.scrollTo(0, 0);
-        }
-
-        function toggleDashboard() {
-            const mainContent = document.getElementById('main-app');
-            const dash = document.getElementById('admin-dashboard');
-            
-            if (dash.classList.contains('hidden')) {
-                mainContent.classList.add('hidden');
-                dash.classList.remove('hidden');
-                updateDashboard(); // Refresh data
-                window.scrollTo(0, 0);
-            } else {
-                showMainApp();
-            }
-            closeMobileMenu();
-        }
-
-        // Real-time Pricing Logic
-        const serviceSelect = document.getElementById('orderService');
-        const qtyInput = document.getElementById('orderQty');
-
-        function calculateTotal() {
-            const qtyLabel = document.getElementById('qtyLabel');
-            const totalDisplay = document.getElementById('orderTotalDisplay');
-
-            if (serviceSelect.selectedIndex === 0) {
-                currentTotal = 0;
-                totalDisplay.innerText = "Rp 0";
-                return;
-            }
-
-            const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
-            const price = parseFloat(selectedOption.getAttribute('data-price'));
-            const type = selectedOption.getAttribute('data-type');
-            
-            // Update Label Kg/Pcs
-            qtyLabel.innerText = type === 'kg' ? 'Kg' : 'Pcs';
-            
-            // Allow decimals for Kg, force integer for Pcs in a real app, but step="0.1" handles HTML side
-            const qty = parseFloat(qtyInput.value) || 0;
-            currentTotal = price * qty;
-            
-            totalDisplay.innerText = formatRupiah(currentTotal);
-        }
-
-        // Attach listeners for real-time calc
-        serviceSelect.addEventListener('change', calculateTotal);
-        qtyInput.addEventListener('input', calculateTotal);
-
-        // Form Submit: Request Pickup
-        document.getElementById('pickupForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('pickupName').value.trim();
-            const wa = document.getElementById('pickupWA').value.trim();
-            const address = document.getElementById('pickupAddress').value.trim();
-            
-            const courierVal = document.getElementById('pickupCourier').value;
-            if (!courierVal) { showToast("Pilih kurir terlebih dahulu!"); return; }
-            
-            const [courierPhone, courierName] = courierVal.split('|');
-
-            const text = `Halo Kak ${courierName},\n\nMohon bantuannya untuk pickup/jemput laundry saya dengan detail berikut:\n\n*Nama:* ${name}\n*No WhatsApp:* ${wa}\n*Alamat Penjemputan:* ${address}\n\nTolong kabari jika sudah menuju lokasi ya. Terima kasih!`;
-            
-            // Use encodeURIComponent to handle spaces and newlines safely
-            const encodedText = encodeURIComponent(text);
-            window.open(`https://wa.me/${courierPhone}?text=${encodedText}`, '_blank');
-            
-            document.getElementById('pickupForm').reset();
-            showToast('Membuka WhatsApp Kurir...');
-        });
-
-        // Form Submit: Order & POS
-        document.getElementById('orderForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            
-            const name = document.getElementById('orderName').value.trim();
-            const wa = document.getElementById('orderWA').value.trim();
-            const address = document.getElementById('orderAddress').value.trim();
-            
-            if (serviceSelect.selectedIndex === 0) { showToast("Pilih layanan!"); return; }
-            const serviceText = serviceSelect.options[serviceSelect.selectedIndex].text;
-            const serviceType = serviceSelect.options[serviceSelect.selectedIndex].getAttribute('data-type');
-            
-            const qty = parseFloat(document.getElementById('orderQty').value);
-            const payment = document.getElementById('orderPayment').value;
-            
-            const adminVal = document.getElementById('orderAdmin').value;
-            const [adminPhone, adminName] = adminVal.split('|');
-
-            if(currentTotal <= 0) { showToast("Jumlah tidak valid!"); return; }
-
-            // Save to LocalStorage (Admin POS)
-            const orderRecord = {
-                id: 'INV-' + Date.now().toString().slice(-6),
-                time: new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'}),
-                name: name,
-                service: serviceText,
-                type: serviceType, // 'kg' or 'pcs'
-                qty: qty,
-                payment: payment,
-                total: currentTotal
-            };
-            
-            orders.push(orderRecord);
-            localStorage.setItem('rizqiyya_orders', JSON.stringify(orders));
-            updateDashboard();
-
-            // Prepare WhatsApp Message
-            const unit = serviceType === 'kg' ? 'Kg' : 'Pcs';
-            const text = `Halo ${adminName},\n\nSaya ingin melakukan pemesanan layanan Rizqiyya Laundry dengan detail berikut:\n\n*Nama:* ${name}\n*No WhatsApp:* ${wa}\n*Alamat Lengkap:* ${address}\n*Layanan:* ${serviceText}\n*Jumlah:* ${qty} ${unit}\n*Metode Pembayaran:* ${payment}\n\n*Estimasi Harga: ${formatRupiah(currentTotal)}*\n\nMohon segera diproses ya. Terima kasih!`;
-            
-            const encodedText = encodeURIComponent(text);
-            window.open(`https://wa.me/${adminPhone}?text=${encodedText}`, '_blank');
-            
-            // Reset Form
-            document.getElementById('orderForm').reset();
-            calculateTotal(); // Reset calculation display
-            showToast('Pesanan disimpan. Membuka WhatsApp...');
-        });
-
-        function updateDashboard() {
-            const tbody = document.getElementById('orderTableBody');
-            tbody.innerHTML = '';
-            
-            let totalOmset = 0;
-            let totalKg = 0;
-            let totalPcs = 0;
-
-            if (orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">Belum ada pesanan hari ini.</td></tr>`;
-            } else {
-                orders.forEach((o, index) => {
-                    totalOmset += o.total;
-                    if (o.type === 'kg') totalKg += o.qty;
-                    if (o.type === 'pcs') totalPcs += o.qty;
-
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td class="p-4 align-top">${o.time}</td>
-                        <td class="p-4 align-top font-medium text-gray-900">${o.name} <br><span class="text-xs text-gray-500 font-mono">${o.id}</span></td>
-                        <td class="p-4 align-top">${o.service}</td>
-                        <td class="p-4 align-top">${o.qty} ${o.type}</td>
-                        <td class="p-4 align-top font-medium text-brand-600">${formatRupiah(o.total)}</td>
-                        <td class="p-4 align-top"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs border border-gray-200">${o.payment}</span></td>
-                        <td class="p-4 align-top text-center">
-                            <button onclick="cetakStruk(${index})" class="bg-brand-100 text-brand-700 px-3 py-1.5 rounded hover:bg-brand-200 text-sm font-bold transition"><i class="fa-solid fa-print"></i> Cetak</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            // Fix floating point math for Kg display
-            document.getElementById('dashOmset').innerText = formatRupiah(totalOmset);
-            document.getElementById('dashKg').innerText = parseFloat(totalKg.toFixed(2)) + ' Kg';
-            document.getElementById('dashPcs').innerText = totalPcs + ' Pcs';
-        }
-
-        function clearOrders() {
-            if(confirm("Apakah Anda yakin ingin menghapus SEMUA data pesanan? Pastikan Anda sudah melakukan 'Tutup Kasir'.")) {
-                orders = [];
-                localStorage.removeItem('rizqiyya_orders');
-                updateDashboard();
-                showToast("Data pesanan berhasil direset.");
-            }
-        }
-
-        function cetakStruk(index) {
-            const order = orders[index];
-            if (!order) return;
-
-            const dateStr = new Date().toLocaleDateString('id-ID');
-            
-            // Build print content
-            const content = `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>ID: <b>${order.id}</b></span> <span>${dateStr} ${order.time}</span>
-                </div>
-                <div style="margin-bottom: 12px; font-size: 16px;">
-                    Pelanggan: <br><b>${order.name}</b>
-                </div>
-                <hr style="border-top: 1px dashed black; margin: 12px 0;">
-                
-                <div style="margin-bottom: 8px;"><b>Layanan:</b><br>${order.service}</div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Jumlah: ${order.qty} ${order.type.toUpperCase()}</span>
-                </div>
-                
-                <hr style="border-top: 1px dashed black; margin: 12px 0;">
-                <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 20px; margin-bottom: 10px;">
-                    <span>TOTAL</span>
-                    <span>${formatRupiah(order.total)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 16px;">
-                    <span>Metode Bayar:</span>
-                    <span><b>${order.payment.toUpperCase()}</b></span>
-                </div>
-            `;
-            
-            // Inject content
-            document.getElementById('print-content').innerHTML = content;
-            
-            // Unhide print area temporarily for the print dialog
-            const printArea = document.getElementById('print-area');
-            printArea.classList.remove('hidden');
-            
-            // Trigger print
-            window.print();
-            
-            // Hide it back
-            printArea.classList.add('hidden');
-        }
-
-        function tutupKasir() {
-            if (orders.length === 0) {
-                alert("Belum ada transaksi yang tercatat hari ini.");
-                return;
-            }
-
-            let tOmset = 0;
-            let tKg = 0;
-            let tPcs = 0;
-            let pTunai = 0, pQris = 0, pDebit = 0;
-
-            orders.forEach(o => {
-                tOmset += o.total;
-                if(o.type === 'kg') tKg += o.qty;
-                if(o.type === 'pcs') tPcs += o.qty;
-                
-                if(o.payment === 'Tunai') pTunai += o.total;
-                if(o.payment === 'QRIS') pQris += o.total;
-                if(o.payment === 'Debit') pDebit += o.total;
+        // Auto-focus OTP inputs
+        const otpInputs = document.querySelectorAll('.otp-input');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if(e.target.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
             });
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Backspace' && !e.target.value && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
 
-            const dateStr = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            
-            const text = `*LAPORAN TUTUP KASIR RIZQIYYA LAUNDRY*\n\n*Tanggal:* ${dateStr}\n\n*RINGKASAN TRANSAKSI:*\nTotal Transaksi: ${orders.length} Pesanan\nTotal Berat Kiloan: ${parseFloat(tKg.toFixed(2))} Kg\nTotal Item Satuan: ${tPcs} Pcs\n\n*TOTAL OMSET: ${formatRupiah(tOmset)}*\n\n*RINCIAN PEMBAYARAN:*\n- Tunai: ${formatRupiah(pTunai)}\n- QRIS: ${formatRupiah(pQris)}\n- Debit: ${formatRupiah(pDebit)}\n\n_Laporan ini dihasilkan otomatis oleh Sistem POS Rizqiyya Laundry._`;
-            
-            const encodedText = encodeURIComponent(text);
-            // Send exactly to Owner
-            window.open(`https://wa.me/6281212345232?text=${encodedText}`, '_blank');
+        function showLoading(text, duration = 1500) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('loadingOverlay');
+                overlay.querySelector('p').innerText = text;
+                overlay.style.display = 'flex';
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    resolve();
+                }, duration);
+            });
         }
 
-        // Initialize App Dashboard State
-        updateDashboard();
+        async function requestOTP() {
+            const phone = document.getElementById('loginPhone').value;
+            if(!phone || phone.length < 9) {
+                Swal.fire({icon: 'error', title: 'Nomor Tidak Valid', text: 'Masukkan nomor HP yang benar.', confirmButtonColor: '#2563eb'});
+                return;
+            }
+            userPhone = "0" + phone;
+            await showLoading("Menghubungkan ke WhatsApp API...");
+            
+            document.getElementById('phoneStep').classList.add('hidden');
+            document.getElementById('otpStep').classList.remove('hidden');
+            otpInputs[0].focus();
+            
+            // Auto fill for demo
+            setTimeout(() => {
+                otpInputs[0].value = 1; otpInputs[1].value = 2; otpInputs[2].value = 3; otpInputs[3].value = 4;
+            }, 1000);
+        }
+
+        async function verifyOTP() {
+            const otp = Array.from(otpInputs).map(i => i.value).join('');
+            if(otp !== '1234') {
+                Swal.fire({icon: 'error', title: 'OTP Salah', text: 'Masukkan kode 1234 untuk demo.', confirmButtonColor: '#2563eb'});
+                return;
+            }
+            await showLoading("Memverifikasi Data Pelanggan...");
+            
+            // Set User Data
+            document.getElementById('customerNameDisplay').innerText = userPhone;
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            // Save state
+            localStorage.setItem('rizqiyya_cust_logged_in', 'true');
+        }
+
+        function resetLogin() {
+            document.getElementById('otpStep').classList.add('hidden');
+            document.getElementById('phoneStep').classList.remove('hidden');
+            otpInputs.forEach(i => i.value = '');
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'Keluar?',
+                text: "Anda harus login kembali nanti.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Keluar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('rizqiyya_cust_logged_in');
+                    window.location.reload();
+                }
+            })
+        }
+
+        // --- System 3: Auto WhatsApp API Integration ---
+        async function submitPickup() {
+            const addr = document.getElementById('pickupAddress').value;
+            const time = document.getElementById('pickupTime').value;
+            const courier = document.getElementById('pickupCourier').value;
+
+            if(!addr || !time || !courier) {
+                Swal.fire({icon: 'warning', title: 'Data Belum Lengkap', text: 'Mohon isi alamat, waktu, dan kurir.', confirmButtonColor: '#2563eb'});
+                return;
+            }
+
+            // Simulate WABA API Call
+            await showLoading("Mengirim Instruksi ke Sistem Admin & Kurir...", 2000);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Jadwal Terkonfirmasi!',
+                html: `Kurir <b>${courier}</b> akan datang pada slot <b>${time}</b>. Notifikasi telah masuk ke sistem toko.`,
+                confirmButtonColor: '#2563eb'
+            });
+            
+            // Reset form
+            document.getElementById('pickupAddress').value = '';
+            document.getElementById('pickupTime').value = '';
+            document.getElementById('pickupCourier').value = '';
+        }
+
+        // --- System 2: Real-time Sync (Listening to Admin events via LocalStorage) ---
+        // In a real app, this would be Firebase snapshot listeners or WebSockets.
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'rizqiyya_order_update') {
+                const data = JSON.parse(event.newValue);
+                
+                // Update UI based on Admin changes
+                if(data.status === 'Lunas') {
+                    const badge = document.getElementById('paymentStatusBadge');
+                    badge.innerText = 'LUNAS';
+                    badge.classList.replace('text-red-500', 'text-green-500');
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Pembayaran Diterima',
+                        text: 'Admin telah mengonfirmasi pembayaran Anda.',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+                
+                if(data.status === 'Selesai') {
+                    const badge = document.getElementById('orderStatusBadge');
+                    badge.innerText = 'Siap Diambil';
+                    badge.classList.replace('bg-yellow-100', 'bg-green-100');
+                    badge.classList.replace('text-yellow-700', 'text-green-700');
+                }
+            }
+        });
+
+        // --- System 5: Payment Gateway Simulation ---
+        function simulatePayment() {
+            Swal.fire({
+                title: 'Membuka Payment Gateway...',
+                html: '<div class="spinner mx-auto my-4"></div><p class="text-sm">Mengarahkan ke Midtrans/QRIS...</p>',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                timer: 2000
+            }).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Pembayaran Berhasil!',
+                    text: 'Sistem Admin otomatis mendeteksi pembayaran Anda.',
+                    confirmButtonColor: '#2563eb'
+                }).then(() => {
+                    const badge = document.getElementById('paymentStatusBadge');
+                    badge.innerText = 'LUNAS';
+                    badge.classList.replace('text-red-500', 'text-green-500');
+                    
+                    // Simulate triggering update to Admin App
+                    localStorage.setItem('rizqiyya_order_update', JSON.stringify({id: 'INV-001', status: 'Lunas', time: Date.now()}));
+                });
+            });
+        }
+
+        // AI Feature Simulation
+        async function simulateAI() {
+            await showLoading("AI Gemini Menganalisis Gambar...", 2500);
+            Swal.fire({
+                icon: 'info',
+                title: 'Hasil Analisis AI',
+                html: '<p class="text-sm text-left"><b>Terdeteksi:</b> Noda Minyak/Kari.<br><br><b>Rekomendasi:</b> Gunakan layanan "Cuci Khusus Ekstra Chemical".<br><b>Estimasi Tambahan:</b> Rp 10.000.</p>',
+                confirmButtonText: 'Oke, Mengerti',
+                confirmButtonColor: '#8b5cf6'
+            });
+        }
+
+        // Referral Copy
+        function copyReferral() {
+            navigator.clipboard.writeText("RIZ-CUST-99");
+            Swal.fire({
+                icon: 'success',
+                title: 'Tersalin!',
+                text: 'Kode referral berhasil disalin. Bagikan ke WA teman Anda.',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        }
+
+        // Check login state on load
+        window.onload = () => {
+            if(localStorage.getItem('rizqiyya_cust_logged_in') === 'true') {
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+            }
+        };
     </script>
 </body>
 </html>
