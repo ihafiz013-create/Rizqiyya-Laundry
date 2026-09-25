@@ -151,10 +151,10 @@
                 </div>
             </section>
 
-            <!-- Request Pickup (Auto API Integration) -->
+            <!-- Request Pickup (Direct WA Integration) -->
             <section class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-2xl text-white shadow-lg">
                 <h3 class="font-bold text-lg mb-2"><i class="fas fa-motorcycle mr-2"></i>Jemput Cucian Sekarang</h3>
-                <p class="text-sm opacity-90 mb-4">Pilih jadwal dan kurir, sistem akan mem-forward jadwal ke WA Kurir secara otomatis.</p>
+                <p class="text-sm opacity-90 mb-4">Pilih jadwal dan kurir, sistem akan langsung membuka WhatsApp untuk mengirim detail ke kurir yang dipilih.</p>
                 
                 <div class="space-y-3">
                     <input type="text" id="pickupAddress" placeholder="Alamat Lengkap (Rt/Rw)" class="w-full px-4 py-2.5 rounded-xl text-gray-800 text-sm outline-none focus:ring-2 focus:ring-blue-300">
@@ -175,7 +175,7 @@
                     </div>
                     
                     <button onclick="submitPickup()" class="w-full bg-white text-blue-700 font-bold py-3 rounded-xl mt-2 shadow hover:bg-gray-100 transition flex items-center justify-center">
-                        <i class="fas fa-paper-plane mr-2"></i> Jadwalkan Otomatis (API)
+                        <i class="fab fa-whatsapp mr-2 text-green-500 text-lg"></i> Hubungi Kurir (WA)
                     </button>
                 </div>
             </section>
@@ -314,7 +314,7 @@
             })
         }
 
-        // --- System 3: Auto WhatsApp API Integration to Specific Couriers ---
+        // --- SISTEM REQUEST PICKUP TERBARU (MEMBUKA WHATSAPP LANGSUNG) ---
         async function submitPickup() {
             const addr = document.getElementById('pickupAddress').value;
             const time = document.getElementById('pickupTime').value;
@@ -325,20 +325,22 @@
                 return;
             }
 
-            const courierPhone = courierSelect.value; // Target WA Number
+            const courierPhone = courierSelect.value; // Mengambil nomor WA kurir (628...)
             const courierName = courierSelect.options[courierSelect.selectedIndex].text;
+            const customerPhone = localStorage.getItem('rizqiyya_cust_phone') || "Pelanggan";
 
-            // Simulate WABA API Call sending specifically to the courier's WA
-            await showLoading(`Mem-forward jadwal ke WA ${courierName}...`, 2000);
+            await showLoading(`Membuka WhatsApp ${courierName}...`, 1000);
             
-            Swal.fire({
-                icon: 'success',
-                title: 'Jadwal Terkirim ke Kurir!',
-                html: `Sistem API telah mengirimkan instruksi penjemputan otomatis ke WhatsApp kurir <b>${courierName} (+${courierPhone})</b>.<br><br>Mohon tunggu kedatangan kurir pada slot waktu <b>${time}</b>.`,
-                confirmButtonColor: '#2563eb'
-            });
+            // Format pesan yang akan dikirim ke WhatsApp Kurir
+            const waMessage = `Halo ${courierName},%0A%0ASaya ingin request penjemputan cucian Rizqiyya Laundry.%0A%0A📍 *Alamat:* ${addr}%0A⏰ *Waktu Jemput:* ${time}%0A📞 *Kontak Pelanggan:* ${customerPhone}%0A%0AMohon segera dijadwalkan ya. Terima kasih!`;
             
-            // Reset form
+            // Buat link API WhatsApp resmi
+            const waLink = `https://wa.me/${courierPhone}?text=${waMessage}`;
+            
+            // Buka aplikasi WhatsApp langsung di HP/PC pelanggan
+            window.open(waLink, '_blank');
+            
+            // Reset form setelah tombol ditekan
             document.getElementById('pickupAddress').value = '';
             document.getElementById('pickupTime').value = '';
             document.getElementById('pickupCourier').value = '';
